@@ -8,22 +8,18 @@ Select continent, location, date, total_cases, total_deaths, population
 from CovidDeaths
 order by 2,3
 
---Querying Total Cases Vs Total Deaths-- 
---Likelyhood of dying if you contract Covid in your country as @ 2020--
 create view LikelyhoodOfDying as
 select continent, location, date, total_cases, total_deaths, (total_deaths/total_cases)*100 as DeathPercentage
 from CovidDeaths
 where continent is not null
 --order by 2,3
 
---Querying countries with %Population infection-- 
 create view PercentagePopulationInfected as
 select continent, location, date, population, total_cases, (total_cases/population)*100 as PecentagePopulationInfected
 from CovidDeaths
 where continent is not null
 --order by 2,3
 
---Countries with highest deaths rate compared to population
 create view HighestDeathRatePerCountry as
 select location, population, max (cast (total_deaths as int)) as HighestDeathCount, max((total_deaths/population))*100 
 as PecentagePopulationDeath
@@ -39,7 +35,6 @@ where continent is not null
 group by location, population
 order by  PecentagePopulationDeath desc
 
---Countries with highest Covid Cases rate compared to population
 create view HighestCasePerPopulation as
 select location, population, max (cast (total_cases as int)) as HighestcaseCount, max(total_cases/population)*100 
 as PecentagePopulationInfected
@@ -48,7 +43,6 @@ where continent is not null
 group by location, population
 --order by  PecentagePopulationInfected desc
 
---Countries with Hihest Death Count
 create view HighestDeathCountPerCountry as
 select location, max (cast (total_deaths as int)) as HigestDeathsCount
 from CovidDeaths
@@ -56,7 +50,6 @@ where continent is not null and total_deaths is not null
 Group by location
 --order by HigestDeathsCount desc
 
---Continent with Hihest Death Rate
 create view HighestDeathCountPerContinent as
 select location, max (cast (total_deaths as int)) as TotalDeathCount
 from CovidDeaths
@@ -64,7 +57,6 @@ where continent is null
 group by location
 --order by TotalDeathCount desc
 
---Pecentage of Global Deaths
 create view GlobalDeathPerCountry as
 select date, sum(new_cases) as total_cases, sum(cast (new_deaths as int)) as total_death, sum (cast (new_deaths as int)) /sum (new_cases) *100 
 as DeathsPercentage
@@ -72,6 +64,7 @@ from CovidDeaths
 where continent is not null
 group by date
 --order by 1,2
+  
 create view GlobalCasesAndDeath as
 select sum(new_cases) as total_cases, sum(cast (new_deaths as int)) as total_death, sum (cast (new_deaths as int)) /sum (new_cases) *100 
 as DeathsPercentage
@@ -80,7 +73,6 @@ where continent is not null
 --group by date
 --order by 1,2
 
--- Global Deaths and Vaccination
 
 select*
 from CovidDeaths dea
@@ -89,7 +81,6 @@ on dea.location = vac.location
 and dea.date = vac.date
 --order by 3,4
 
---Looking at Global Poupulation and New Vaccination
 create view NewAndRollingVaccination as
 select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations,
 sum (cast (vac.new_vaccinations as int)) over (partition by dea.location order by dea.location,dea.date)
@@ -100,8 +91,6 @@ on dea.location = vac.location
 and dea.date = vac.date
 where dea.continent is not null
 --order by 2,3
-
---USING CTE
 
 with PopulationVaccinated (continent, location, date, population, new_vaccination, RollingPeopleVaccinated)
 as 
@@ -119,7 +108,6 @@ where dea.continent is not null
 select*,(RollingPeopleVaccinated/population)*100
 from PopulationVaccinated
 
---USING TEMP TABLE
 
 drop table if exists PopulationVaccinated
 Create table PopulationVaccinated
@@ -145,7 +133,6 @@ order by 2,3
 select*,(RollingPeopleVaccinated/population)*100 as PercentageRollingVaccinated
 from PopulationVaccinated
 
---CREATE VIEW FOR DATA VIZUALIZATION
 create view GlobalPoupulationAndNewVaccination as 
 select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations,
 sum (cast (vac.new_vaccinations as int)) over (partition by dea.location order by dea.location,dea.date)
